@@ -18,9 +18,9 @@ app.get("/", (request, response) => {
     response.send("API is working.");
 });
 
-app.post("/rpc", (request, response) => {
+app.post("/movies", (request, response) => {
     switch (request.body.action) {
-        case "getMovies":
+        case "viewList":
             db.movies.findAsync({})
                 .then((results) => {
                     response.json(results);
@@ -29,7 +29,7 @@ app.post("/rpc", (request, response) => {
                     response.json({ error: error });
                 });
             break;
-        case "addMovie":
+        case "addNew":
             db.movies.insertAsync({
                 title: request.body.title
             }).then((document) => {
@@ -38,9 +38,25 @@ app.post("/rpc", (request, response) => {
                 response.json({ error: error });
             });
             break;
-        case "rateMovie":
+        default:
+            response.json({ error: { message: "No action given" } });
+    }
+});
+
+app.post("/movies/:id", (request, response) => {
+    switch (request.body.action) {
+        case "view":
+            db.movies.findOneAsync({
+                _id: request.params.id
+            }).then((document) => {
+                response.json(document);
+            }).catch((error) => {
+                response.json({ error: error });
+            });
+            break;
+        case "rate":
             db.movies.updateAsync(
-                { title: request.body.title },
+                { title: request.params.id },
                 { $set: { rating: request.body.rating } }
             ).then((result) => {
                 response.json({
@@ -53,7 +69,7 @@ app.post("/rpc", (request, response) => {
             });
             break;
         default:
-            response.send("No action given");
+            response.json({ error: { message: "No action given" } });
     }
 });
 
